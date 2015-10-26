@@ -4,7 +4,7 @@ from setuptools import setup
 
 def get_version():
     basedir = os.path.dirname(__file__)
-    with open(os.path.join(basedir, 'times/version.py')) as f:
+    with open(os.path.join(basedir, 'times2/version.py')) as f:
         variables = {}
         exec(f.read(), variables)
         return variables.get('VERSION')
@@ -12,21 +12,21 @@ def get_version():
 
 
 setup(
-    name='times',
+    name='times2',
     version=get_version(),
-    url='https://github.com/nvie/times/',
+    url='https://github.com/marcinn/times2',
     license='BSD',
-    author='Vincent Driessen',
-    author_email='vincent@3rdcloud.com',
-    description='Times is a small, minimalistic, Python library for dealing '
+    author='Marcin Nowak, Vincent Driessen',
+    author_email='marcin.j.nowak@gmail.com',
+    description='Times2 is a small, minimalistic, Python library for dealing '
            'with time conversions between universal time and arbitrary '
            'timezones.',
     long_description=__doc__,
-    packages=['times'],
+    packages=['times2'],
+    install_requires=['pytz', 'python-dateutil'],
     include_package_data=True,
     zip_safe=False,
     platforms='any',
-    install_requires=['arrow'],
     classifiers=[
         # As from http://pypi.python.org/pypi?%3Aaction=list_classifiers
         #'Development Status :: 1 - Planning',

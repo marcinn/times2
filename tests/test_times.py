@@ -5,7 +5,7 @@ except ImportError:
 from datetime import datetime
 
 import pytz
-import times
+import times2 as times
 
 
 class TestTimes(unittest.TestCase):
@@ -15,12 +15,12 @@ class TestTimes(unittest.TestCase):
 
         self.time_in_ny = est.localize(datetime(2012, 2, 1, 6, 56, 31))
         self.time_in_ams = ams.localize(datetime(2012, 2, 1, 12, 56, 31))
-        self.sometime_univ = datetime(2012, 2, 1, 11, 56, 31)
+        self.sometime_univ = pytz.utc.localize(datetime(2012, 2, 1, 11, 56, 31))
 
     def test_now(self):  # noqa
-        """times.now() has no attached timezone info"""
+        """times.now() has attached timezone info"""
         now = times.now()
-        self.assertIsNone(now.tzinfo)
+        self.assertIsNotNone(now.tzinfo)
 
     def test_to_universal_with_tzinfo(self):  # noqa
         """Convert local dates with timezone info to universal date"""
@@ -63,7 +63,7 @@ class TestTimes(unittest.TestCase):
         unix_time = 1328257004.456  # as returned by time.time()
         self.assertEquals(
             times.to_universal(unix_time),
-            datetime(2012, 2, 3, 8, 16, 44, 456000)
+            pytz.utc.localize(datetime(2012, 2, 3, 8, 16, 44, 456000))
         )
 
     def test_to_universal_with_string(self):
@@ -92,7 +92,7 @@ class TestTimes(unittest.TestCase):
         unix_time = 1328257004.456  # as returned by time.time()
         self.assertEquals(
             times.from_unix(unix_time),
-            datetime(2012, 2, 3, 8, 16, 44, 456000)
+            pytz.utc.localize(datetime(2012, 2, 3, 8, 16, 44, 456000))
         )
 
         self.assertEquals(
@@ -110,12 +110,17 @@ class TestTimes(unittest.TestCase):
         with self.assertRaises(TypeError):
             times.from_unix('lol')
 
-    def test_convert_datetime_to_unix_time(self):  # noqa
-        """Can convert UNIX time to universal time."""
+    def test_refuse_convert_datetime_to_unix_time(self):  # noqa
+        """Refuse direct conversion from UNIX time to universal time."""
+        with self.assertRaises(TypeError):
+            times.to_unix(datetime(2012, 2, 3, 8, 16, 44))
+
+    def test_convert_datetime_aware_to_unix_time(self):  # noqa
+        """Convert datetime aware time to universal time."""
         self.assertEquals(
-            times.to_unix(datetime(2012, 2, 3, 8, 16, 44)),
-            1328257004.0
-        )
+                times.to_unix(times.to_local(datetime(2012, 2, 3, 8, 16, 44), 'Europe/Warsaw')),
+                1328257004.0
+                )
 
     def test_convert_non_numeric_to_unix(self):
         """to_unix refuses to accept non-numeric input"""
@@ -130,11 +135,10 @@ class TestTimes(unittest.TestCase):
         self.assertEquals(times.to_local(univ, 'EST'),
                           self.time_in_ny)
 
-    def test_convert_refuses_local_to_local(self):
-        """Refuses to convert between timezones directly"""
+    def test_convert_allow_local_to_local(self):
+        """Allow to convert between timezones directly"""
         loc = self.time_in_ams
-        with self.assertRaises(ValueError):
-            times.to_local(loc, 'Europe/Amsterdam')
+        times.to_local(loc, 'Europe/Amsterdam')
 
     def test_format_without_tzinfo(self):  # noqa
         """Format times without timezone info"""
@@ -153,12 +157,6 @@ class TestTimes(unittest.TestCase):
         est = 'EST'
         self.assertEquals(times.format(dt, auckland, '%H'), '00')
         self.assertEquals(times.format(dt, est, '%H'), '06')
-
-    def test_format_refuses_local_times(self):
-        """Format refuses local time input"""
-        auckland = 'Pacific/Auckland'
-        with self.assertRaises(ValueError):
-            times.format(self.time_in_ams, auckland)
 
     def test_convert_between_unix_times(self):  # noqa
         """Can convert UNIX time to universal time and back."""

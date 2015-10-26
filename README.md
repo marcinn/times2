@@ -1,47 +1,46 @@
-**NOTE:**  
-This library will not be maintained any further.  **You probably want to use
-the excellent [Arrow](http://crsmithdev.com/arrow/) library.**
 
+Version 0.8 of times2 is based on original `times` library developed by
+Vincent Driessen, but slighltly modified and **without** Arrow
+dependency.
 
-> “There should be one—and preferably only one—obvious way to do it.”
+The main assumption is to provide library which operates on native
+and tz-aware datetime objects.  Arrow is a great library but introduces
+new type, which is incompatible with datetime interface and can't be
+used as a simple replacement - there are conversion steps needed.
 
-In fact, version 0.7 of times has been rewritten to be implemented on top of
-Arrow, so it still provides the Times interface, but you'll already be using
-Arrow.  You can probably easily replace your times function calls by Arrow
-objects.
+The goal of times2 is to provide a useful set of helpers which operates on
+standard datetime objects.
 
 ---
 
-Times
-=====
+Times2
+======
 
 Build status:
-[![Build Status](https://travis-ci.org/nvie/times.svg?branch=master)](http://travis-ci.org/nvie/times)
-[![Coverage Status](https://img.shields.io/coveralls/nvie/times.svg)](https://coveralls.io/r/nvie/times?branch=master)
+[![Build Status](https://travis-ci.org/marcinn/times2.svg?branch=master)](http://travis-ci.org/marcinn/times2)
+[![Coverage Status](https://img.shields.io/coveralls/marcinn/times2.svg)](https://coveralls.io/r/marcinn/times2?branch=master)
 
 
-Times is a small, minimalistic, Python library for dealing with time
+Times2 is a small, minimalistic, Python library for dealing with time
 conversions to and from timezones, for once and for all.
 
 
 Accepting time
 --------------
 
-Never work with _local_ times.  Whenever you must accept local time input (e.g.
-from a user), convert it to universal time immediately:
+Never work with _local_ (naive) times.  Whenever you must accept local time input (e.g.
+from a user), convert it to universal (or aware) time immediately:
 
 ```pycon
->>> times.to_universal(local_time, 'Europe/Amsterdam')
-datetime.datetime(2012, 2, 1, 10, 31, 45, 781262)
+>>> times2.to_universal(datetime.datetime(2015,10,26,10,20,0), 'Europe/Warsaw')
+datetime.datetime(2015, 10, 26, 9, 20, tzinfo=<UTC>)
 ```
 
 The second argument can be a `pytz.timezone` instance, or a timezone string.
+Leaved empty will use output of `times2.local_tz()`
 
 If the `local_time` variable already holds timezone info, you _must_ leave out
 the source timezone from the call.
-
-To enforce best practices, `times` will never implicitly convert times for you,
-even if that would technically be possible.
 
 
 Date Strings
@@ -50,8 +49,8 @@ If you want to accepting datetime representations in string form (for example,
 from JSON APIs), you can convert them to universal datetimes easily:
 
 ```pycon
->>> import time, times
->>> print times.to_universal('2012-02-03 11:59:03-0500')   # auto-detects source timezone
+>>> import time, times2
+>>> print times2.to_universal('2012-02-03 11:59:03-0500')   # auto-detects source timezone
 ```
 
 `Times` utilizes the string parsing routines available in [dateutil][1].  Note
@@ -62,10 +61,10 @@ If the string does not contain any timezone offset, you _must_ specify the
 source timezone explicitly:
 
 ```pycon
->>> print times.to_universal('2012-02-03 11:59:03', 'Europe/Amsterdam')
+>>> print times2.to_universal('2012-02-03 11:59:03', 'Europe/Amsterdam')
 ```
 
-This is the inverse of `times.format()`.
+This is the inverse of `times2.format()`.
 
 
 POSIX timestamps
@@ -74,19 +73,21 @@ If you prefer working with UNIX (POSIX) timestamps, you can convert them to
 safe datetime representations easily:
 
 ```pycon
->>> import time, times
->>> print times.to_universal(time.time())
-2012-02-03 11:59:03.588419
+>>> import time, times2
+>>> print times2.to_universal(time.time())
+datetime.datetime(2015, 10, 26, 14, 28, 7, 283998, tzinfo=<UTC>)
 ```
 
 Note that `to_universal` auto-detects that you give it a UNIX timestamp.
 
-To get the UNIX timestamp representation of a universal datetime, use:
+To get the UNIX timestamp representation of any tz-aware datetime, use:
 
 ```pycon
->>> print times.to_unix(universal_time)
+>>> print times2.to_unix(universal_time)
 ```
 
+Naive datetimes are not supported. You must convert them to aware
+datetimes before using `to_unix()`.
 
 Current time
 ------------
@@ -94,11 +95,10 @@ Current time
 When you want to record the current time, you can use this convenience method:
 
 ```pycon
->>> import times
->>> print times.now()
-datetime.datetime(2012, 2, 1, 11, 51, 27, 621491)
+>>> import times2
+>>> times2.now()
+datetime.datetime(2015, 10, 26, 14, 38, 41, 871750, tzinfo=<UTC>)
 ```
-
 
 Presenting times
 ----------------
@@ -108,8 +108,8 @@ format your universal time to your user's local timezone.
 
 ```pycon
 >>> import times
->>> now = times.now()
->>> print times.format(now, 'CET')
+>>> now = times2.now()
+>>> print times2.format(now, 'CET')
 2012-02-01 21:32:10+0100
 ```
 

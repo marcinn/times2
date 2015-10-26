@@ -8,3 +8,5 @@
 
 /.envrc
 /.direnv
+/.env
+/.coverage
