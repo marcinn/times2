@@ -9,7 +9,7 @@ python:
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == 2.6 ]]; then pip install -r py26-requirements.txt; fi
   - pip install -r requirements.txt
-  - if [[ $TRAVIS_PYTHON_VERSION == 3.2 ]]; pip install coveralls<4; else pip install coveralls; fi
+  - pip install coveralls
 script:
   - nosetests --with-coverage --cover-erase --cover-package=times2
 after_success:
